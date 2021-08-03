@@ -15,17 +15,29 @@ ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 RUN addgroup nomad && \
     adduser -S -G nomad nomad
 
+# https://github.com/sgerrand/alpine-pkg-glibc/releases
+ARG GLIBC_VERSION=2.33-r0
+
+ADD https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub /etc/apk/keys/sgerrand.rsa.pub
+ADD https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
+    glibc.apk
+RUN apk add --no-cache \
+        glibc.apk \
+ && rm glibc.apk
+
 # Set up certificates, base tools, and Nomad.
 # libc6-compat is needed to symlink the shared libraries for ARM builds
 RUN set -eux && \
-    apk add --no-cache ca-certificates curl dumb-init gnupg libcap openssl su-exec iputils jq libc6-compat iptables && \
+    apk add --no-cache ca-certificates curl dumb-init gnupg libcap openssl su-exec iputils jq iptables && \
     gpg --keyserver keyserver.ubuntu.com --recv-keys C874011F0AB405110D02105534365D9472D7468F && \
     mkdir -p /tmp/build && \
     cd /tmp/build && \
     apkArch="$(apk --print-arch)" && \
     case "${apkArch}" in \
-        aarch64) nomadArch='arm64' ;; \
-        armhf) nomadArch='arm' ;; \
+        aarch64) nomadArch='arm64' \
+                 apk add --no-cache libc6-compat ;; \
+        armhf) nomadArch='arm' \
+               apk add --no-cache libc6-compat ;; \
         x86) nomadArch='386' ;; \
         x86_64) nomadArch='amd64' ;; \
         *) echo >&2 "error: unsupported architecture: ${apkArch} (see ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/)" && exit 1 ;; \
