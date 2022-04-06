@@ -4,7 +4,7 @@ LABEL LABEL maintainer="Roman Posudnevskiy <roman.posudnevskiy@gmail.com>"
 # Based on https://github.com/hashicorp/docker-consul
 
 # This is the release of Nomad to pull in.
-ARG NOMAD_VERSION=1.1.3
+ARG NOMAD_VERSION=1.2.6
 LABEL org.opencontainers.image.version=$NOMAD_VERSION
 
 # This is the location of the releases.
